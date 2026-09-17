@@ -48,6 +48,7 @@ import {
   X,
 } from 'lucide-react';
 import { FormSectionCard } from '@/components/product-form/FormSectionCard';
+import { SERVICE_CITIES } from '@/lib/serviceCities';
 import { ChipListField } from '@/components/product-form/ChipListField';
 import {
   CustomizationAddonsPanel,
@@ -61,6 +62,15 @@ import {
   isBalloonDecorationCategoryNames,
   type BalloonColorSelectionFormState,
 } from '@/components/product-form/BalloonColorPresetsPanel';
+import {
+  GiftCardPresetsPanel,
+  emptyGiftCardForm,
+  giftCardFormFromApi,
+  giftCardFormToApiPayload,
+  giftCardSizePriceError,
+  isDigitalGiftCardCategoryNames,
+  type GiftCardSelectionFormState,
+} from '@/components/product-form/GiftCardPresetsPanel';
 import { ImageDropzoneField, type ProductImageItem } from '@/components/product-form/ImageDropzoneField';
 import type { ApiProductDoc, ApiVenueDoc, ProductImageSlot } from '@/api/admins';
 import { sanitizeMongoNamedRef } from '@/utils/productForm';
@@ -90,6 +100,7 @@ export type ProductModalSavePayload = {
   tier: 'standard' | 'premium';
   tags: string[];
   inclusions: string[];
+  exclusions: string[];
   experiences: string[];
   keyHighlights: string[];
   additionalCategories: string[];
@@ -106,6 +117,7 @@ export type ProductModalSavePayload = {
   cancellationPolicy: string;
   youtubeVideoLink: string;
   balloonColorSelection?: ReturnType<typeof balloonColorFormToApiPayload>;
+  giftCardSelection?: ReturnType<typeof giftCardFormToApiPayload>;
 };
 
 export type CategoryOption = { id: string; name: string };
@@ -609,9 +621,11 @@ type ProductFormFields = {
   cancellationPolicy: string;
   youtubeVideoLink: string;
   inclusions: string[];
+  exclusions: string[];
   experiences: string[];
   keyHighlights: string[];
   balloonColorSelection: BalloonColorSelectionFormState;
+  giftCardSelection: GiftCardSelectionFormState;
 };
 
 function emptyProductForm(): ProductFormFields {
@@ -637,9 +651,11 @@ function emptyProductForm(): ProductFormFields {
     cancellationPolicy: '',
     youtubeVideoLink: '',
     inclusions: [],
+    exclusions: [],
     experiences: [],
     keyHighlights: [],
     balloonColorSelection: emptyBalloonColorForm(),
+    giftCardSelection: emptyGiftCardForm(),
   };
 }
 
@@ -700,6 +716,12 @@ export function ProductModal({
     selectedThirdCategoryName
   );
 
+  const showGiftCardPanel = isDigitalGiftCardCategoryNames(
+    selectedMainCategoryName,
+    selectedSubCategoryName,
+    selectedThirdCategoryName
+  );
+
   const additionalOptionsForThird = useMemo(() => {
     if (!selectedThirdCategoryName) return [];
     return additionalCategoryOptions.filter((o) => o.thirdName === selectedThirdCategoryName);
@@ -747,6 +769,8 @@ export function ProductModal({
           : [];
       const inc = d.inclusions;
       const inclusions = Array.isArray(inc) ? inc.map(String) : [];
+      const exc = d.exclusions;
+      const exclusions = Array.isArray(exc) ? exc.map(String) : [];
       const exp = d.experiences;
       const experiences = Array.isArray(exp) ? exp.map(String) : [];
       const kh = d.keyHighlights;
@@ -805,6 +829,7 @@ export function ProductModal({
           : [],
         tags: tagsArr,
         inclusions,
+        exclusions,
         experiences,
         keyHighlights,
         additionalCategories,
@@ -818,6 +843,9 @@ export function ProductModal({
         youtubeVideoLink: String((d as { youtubeVideoLink?: string }).youtubeVideoLink ?? ''),
         balloonColorSelection: balloonColorFormFromApi(
           (d as { balloonColorSelection?: unknown }).balloonColorSelection
+        ),
+        giftCardSelection: giftCardFormFromApi(
+          (d as { giftCardSelection?: unknown }).giftCardSelection
         ),
       });
       setFieldErrors({});
@@ -929,6 +957,11 @@ export function ProductModal({
       errors.thirdSubCategoryId = 'Select a third-level category.';
     }
 
+    if (showGiftCardPanel) {
+      const giftErr = giftCardSizePriceError(formData.giftCardSelection);
+      if (giftErr) errors.giftCardSizes = giftErr;
+    }
+
     if (Object.keys(errors).length) {
       setFieldErrors(errors);
       toast({ title: 'Fix the highlighted fields', variant: 'destructive' });
@@ -984,6 +1017,7 @@ export function ProductModal({
       tier: formData.tier === 'premium' ? 'premium' : 'standard',
       tags: formData.tags,
       inclusions: formData.inclusions,
+      exclusions: formData.exclusions,
       experiences: formData.experiences,
       keyHighlights: formData.keyHighlights,
       additionalCategories: formData.additionalCategories,
@@ -999,6 +1033,13 @@ export function ProductModal({
         ? {
             balloonColorSelection: balloonColorFormToApiPayload(
               formData.balloonColorSelection
+            ),
+          }
+        : {}),
+      ...(showGiftCardPanel
+        ? {
+            giftCardSelection: giftCardFormToApiPayload(
+              formData.giftCardSelection
             ),
           }
         : {}),
@@ -1091,6 +1132,11 @@ export function ProductModal({
                 className={cn(fieldErrors.price && 'border-destructive')}
               />
               {fieldErrors.price ? <p className="text-sm text-destructive">{fieldErrors.price}</p> : null}
+              {showGiftCardPanel ? (
+                <p className="text-xs text-muted-foreground">
+                  Listing / starting price. After you choose Digital Gift Card below, set each size&apos;s checkout price in <span className="font-medium">Digital gift card details</span>.
+                </p>
+              ) : null}
             </div>
             <div className="space-y-2">
               <Label htmlFor="prod-sale-price">Sale price (₹) — optional</Label>
@@ -1366,6 +1412,18 @@ export function ProductModal({
           />
         ) : null}
 
+        {showGiftCardPanel ? (
+          <GiftCardPresetsPanel
+            value={formData.giftCardSelection}
+            onChange={(giftCardSelection) =>
+              setFormData({ ...formData, giftCardSelection })
+            }
+            disabled={fieldsDisabled}
+            onReject={chipReject}
+            sizePriceError={fieldErrors.giftCardSizes}
+          />
+        ) : null}
+
         <CustomizationAddonsPanel
           sections={formData.customizationSections}
           onSectionsChange={(next) => setFormData({ ...formData, customizationSections: next })}
@@ -1486,16 +1544,29 @@ export function ProductModal({
                 </div>
                 <div className="space-y-2">
                   <Label>City</Label>
-                  <Input
-                    value={area.city}
-                    onChange={(e) => {
+                  <Select
+                    value={area.city || undefined}
+                    onValueChange={(val) => {
                       const next = [...formData.serviceableAreas];
-                      next[idx] = { ...next[idx], city: e.target.value };
+                      next[idx] = { ...next[idx], city: val };
                       setFormData({ ...formData, serviceableAreas: next });
                     }}
-                    placeholder="e.g. Mumbai"
                     disabled={fieldsDisabled}
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select city / metro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SERVICE_CITIES.map((city) => (
+                        <SelectItem key={city} value={city}>
+                          {city}
+                        </SelectItem>
+                      ))}
+                      {area.city && !SERVICE_CITIES.includes(area.city as (typeof SERVICE_CITIES)[number]) ? (
+                        <SelectItem value={area.city}>{area.city}</SelectItem>
+                      ) : null}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <ChipListField
                   label="Districts"
@@ -1539,6 +1610,14 @@ export function ProductModal({
             placeholder="e.g. Welcome drinks"
             values={formData.inclusions}
             onChange={(next) => setFormData({ ...formData, inclusions: next })}
+            disabled={fieldsDisabled}
+          />
+          <ChipListField
+            label="Not included"
+            description="What is not included in the package."
+            placeholder="e.g. Cake"
+            values={formData.exclusions}
+            onChange={(next) => setFormData({ ...formData, exclusions: next })}
             disabled={fieldsDisabled}
           />
           <ChipListField
@@ -1878,6 +1957,33 @@ export function BlogModal({ open, onOpenChange, blog, onSave }: BlogModalProps) 
         </div>
         <div className="space-y-2">
           <Label>Cities (optional)</Label>
+          <p className="text-xs text-muted-foreground">
+            Leave empty to show in every city. Pick metros from the list — Delhi NCR includes Noida and Greater Noida.
+          </p>
+          <Select
+            onValueChange={(city) => {
+              const current = formData.cities
+                .split(',')
+                .map((c) => c.trim())
+                .filter(Boolean);
+              if (current.includes(city)) return;
+              setFormData({
+                ...formData,
+                cities: [...current, city].join(', '),
+              });
+            }}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Add a city / metro…" />
+            </SelectTrigger>
+            <SelectContent>
+              {SERVICE_CITIES.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Input
             value={formData.cities}
             onChange={(e) => setFormData({ ...formData, cities: e.target.value })}
@@ -1901,6 +2007,7 @@ export type VenueSavePayload = {
   description: string;
   address: string;
   city?: string;
+  mapsUrl?: string;
   lat?: string;
   lng?: string;
   startingPrice: string;
@@ -1938,6 +2045,7 @@ export function VenueModal({
     description: '',
     address: '',
     city: '',
+    mapsUrl: '',
     lat: '',
     lng: '',
     startingPrice: '',
@@ -1963,6 +2071,7 @@ export function VenueModal({
         description: v.description ?? '',
         address: loc?.address ?? '',
         city: loc?.city ?? '',
+        mapsUrl: loc?.mapsUrl ?? '',
         lat: loc?.lat != null ? String(loc.lat) : '',
         lng: loc?.lng != null ? String(loc.lng) : '',
         startingPrice: v.startingPrice != null ? String(v.startingPrice) : '',
@@ -1986,6 +2095,7 @@ export function VenueModal({
       description: '',
       address: '',
       city: '',
+      mapsUrl: '',
       lat: '',
       lng: '',
       startingPrice: '',
@@ -2008,6 +2118,7 @@ export function VenueModal({
       description: formData.description,
       address: formData.address,
       city: formData.city,
+      mapsUrl: formData.mapsUrl,
       lat: formData.lat,
       lng: formData.lng,
       startingPrice: formData.startingPrice,
@@ -2054,12 +2165,36 @@ export function VenueModal({
           />
         </div>
         <div className="space-y-2">
-          <Label>City</Label>
+          <Label>Google Maps link (optional)</Label>
           <Input
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            placeholder="e.g. Mumbai, Delhi NCR"
+            value={formData.mapsUrl}
+            onChange={(e) => setFormData({ ...formData, mapsUrl: e.target.value })}
+            placeholder="https://maps.app.goo.gl/… or Google Maps place URL"
           />
+          <p className="text-xs text-muted-foreground">
+            Used by “Open in Maps” on the venue page. Paste the exact place share link so guests land on this venue, not a nearby street.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label>City / metro</Label>
+          <Select
+            value={formData.city || undefined}
+            onValueChange={(val) => setFormData({ ...formData, city: val })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select city — Delhi NCR covers Greater Noida, Noida, Gurugram" />
+            </SelectTrigger>
+            <SelectContent>
+              {SERVICE_CITIES.map((city) => (
+                <SelectItem key={city} value={city}>
+                  {city}
+                </SelectItem>
+              ))}
+              {formData.city && !SERVICE_CITIES.includes(formData.city as (typeof SERVICE_CITIES)[number]) ? (
+                <SelectItem value={formData.city}>{formData.city}</SelectItem>
+              ) : null}
+            </SelectContent>
+          </Select>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">

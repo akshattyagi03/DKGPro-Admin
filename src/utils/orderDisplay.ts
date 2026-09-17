@@ -56,6 +56,8 @@ type ShippingAddress = {
   state?: string;
   zipCode?: string;
   country?: string;
+  phoneNumber?: string;
+  alternatePhoneNumber?: string;
 };
 
 export function shippingAddressRows(
@@ -69,6 +71,10 @@ export function shippingAddressRows(
   if (address.state?.trim()) rows.push({ label: 'State', value: address.state.trim() });
   if (address.zipCode?.trim()) rows.push({ label: 'PIN code', value: address.zipCode.trim() });
   if (address.country?.trim()) rows.push({ label: 'Country', value: address.country.trim() });
+  if (address.phoneNumber?.trim()) rows.push({ label: 'Phone', value: address.phoneNumber.trim() });
+  if (address.alternatePhoneNumber?.trim()) {
+    rows.push({ label: 'Alternate phone', value: address.alternatePhoneNumber.trim() });
+  }
   return rows;
 }
 
@@ -78,4 +84,29 @@ export function formatBalloonColorLine(
   if (!choice || choice.mode === 'default') return null;
   if (choice.colors?.length) return choice.colors.join(' & ');
   return choice.label?.trim() || null;
+}
+
+export function giftCardDisplayRows(
+  choice?: {
+    babyName?: string;
+    whichBirthday?: string;
+    size?: string;
+    sizePrice?: number;
+  } | null
+): Array<{ label: string; value: string }> {
+  if (!choice) return [];
+  const rows: Array<{ label: string; value: string }> = [];
+  if (choice.babyName?.trim()) rows.push({ label: 'Baby name', value: choice.babyName.trim() });
+  if (choice.whichBirthday?.trim()) {
+    rows.push({ label: 'Birthday', value: choice.whichBirthday.trim() });
+  }
+  if (choice.size?.trim()) {
+    const price = Number(choice.sizePrice);
+    const sizeValue =
+      Number.isFinite(price) && price > 0
+        ? `${choice.size.trim()} · ₹${price.toLocaleString('en-IN')}`
+        : choice.size.trim();
+    rows.push({ label: 'Size', value: sizeValue });
+  }
+  return rows;
 }

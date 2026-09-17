@@ -221,10 +221,14 @@ export default function Products() {
       cancellationPolicy: data.cancellationPolicy || undefined,
       youtubeVideoLink: data.youtubeVideoLink || undefined,
       inclusions: data.inclusions.length ? data.inclusions : undefined,
+      exclusions: data.exclusions.length ? data.exclusions : undefined,
       experiences: data.experiences.length ? data.experiences : undefined,
       keyHighlights: data.keyHighlights.length ? data.keyHighlights : undefined,
       ...(data.balloonColorSelection
         ? { balloonColorSelection: data.balloonColorSelection }
+        : {}),
+      ...(data.giftCardSelection
+        ? { giftCardSelection: data.giftCardSelection }
         : {}),
     });
   };

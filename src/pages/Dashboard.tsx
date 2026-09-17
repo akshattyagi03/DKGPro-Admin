@@ -198,10 +198,14 @@ function VendorDashboard() {
       cancellationPolicy: data.cancellationPolicy || undefined,
       youtubeVideoLink: data.youtubeVideoLink || undefined,
       inclusions: data.inclusions.length ? data.inclusions : ['—'],
+      exclusions: data.exclusions,
       experiences: data.experiences.length ? data.experiences : ['—'],
       keyHighlights: data.keyHighlights.length ? data.keyHighlights : ['—'],
       ...(data.balloonColorSelection
         ? { balloonColorSelection: data.balloonColorSelection }
+        : {}),
+      ...(data.giftCardSelection
+        ? { giftCardSelection: data.giftCardSelection }
         : {}),
     });
   };

@@ -50,6 +50,7 @@ export default function HeroBanners() {
   const [placement, setPlacement] = useState<Placement>('hero');
   const [sortOrder, setSortOrder] = useState<string>('0');
   const [title, setTitle] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
 
   const { data: vendorCategories = [], isLoading: loadingVendorCats } = useQuery({
     queryKey: ['admin', 'categories'],
@@ -102,6 +103,7 @@ export default function HeroBanners() {
       placement?: Placement;
       sortOrder?: number;
       title?: string;
+      description?: string;
     }) =>
       isSuperAdmin ? superAdminAddHeroBanner(payload) : addHeroBanner(payload),
     onSuccess: (data) => {
@@ -112,6 +114,7 @@ export default function HeroBanners() {
       setSubName('');
       setThirdName('');
       setTitle('');
+      setDescription('');
     },
     onError: (err) => {
       const msg = err instanceof ApiError ? err.message : 'Failed to upload banner';
@@ -130,6 +133,7 @@ export default function HeroBanners() {
       placement,
       sortOrder: Number.isFinite(sortNum) ? sortNum : 0,
       ...(title.trim() ? { title: title.trim() } : {}),
+      ...(description.trim() ? { description: description.trim() } : {}),
     };
     if (kind === 'sub') {
       if (!subName) {
@@ -155,8 +159,8 @@ export default function HeroBanners() {
         title="Home banners"
         description={
           isSuperAdmin
-            ? 'Super admin: same CMS banners as vendors — including Wedding page sections (Make Your’s Wedding Extra Special, Romantic Couple Experience). Link each image to a sub- or third-category by exact name.'
-            : 'Upload images for the top hero carousel, home festival strip, /festival hub, /wedding hub, Kids / Occasion, or birthday home sections (Level up your birthday party, Make your birthday extra special). Each banner links to one sub- or third-category (exact name).'
+            ? 'Super admin: same CMS banners as vendors — including home Wedding Special, Baby Milestone & Celebrations, Make Your Wedding Extra Special, and Romantic Couple Experience. Link each image to a sub- or third-category by exact name.'
+            : 'Upload images for the top hero carousel, home festival strip, /festival hub, /wedding hub, Kids / Occasion, or home sections (Wedding Special, Baby Milestone & Celebrations). Each banner links to one sub- or third-category (exact name).'
         }
       />
 
@@ -191,7 +195,7 @@ export default function HeroBanners() {
                       <SelectItem value="festival_hub">Festival hub (/festival page only)</SelectItem>
                       <SelectItem value="wedding">Wedding hub — main grid (/wedding)</SelectItem>
                       <SelectItem value="wedding_extra">
-                        Make Your&apos;s Wedding Extra Special (/wedding)
+                        Make Your Wedding Extra Special (home)
                       </SelectItem>
                       <SelectItem value="romantic_couple">
                         Romantic Couple Experience (/wedding)
@@ -199,10 +203,10 @@ export default function HeroBanners() {
                       <SelectItem value="kids">Kids Decorations</SelectItem>
                       <SelectItem value="occasion">Make Every Occasion Extra Special</SelectItem>
                       <SelectItem value="birthday_level_up">
-                        Level up your birthday party (home — Level Up section)
+                        Baby Milestone &amp; Celebrations (home)
                       </SelectItem>
                       <SelectItem value="birthday_extra_special">
-                        Make your birthday extra special (home — Birthday carousel)
+                        Wedding Special (home)
                       </SelectItem>
                       <SelectItem value="corporate_hero">
                         Corporate events — hero (/corporate-events)
@@ -235,8 +239,9 @@ export default function HeroBanners() {
                   )}
                   {placement === 'wedding_extra' && (
                     <p className="text-xs text-muted-foreground">
-                      Shown in the &quot;Make Your&apos;s Wedding Extra Special&quot; block on{' '}
-                      <strong>/wedding</strong>. Use up to four linked third-category banners for the card grid.
+                      Shown in the &quot;Make Your Wedding Extra Special&quot; block on the guest{' '}
+                      <strong>home</strong> page. Use up to four linked banners for Engagement, Mehendi, Haldi,
+                      and Wedding. Optional title is the card label.
                     </p>
                   )}
                   {placement === 'romantic_couple' && (
@@ -247,16 +252,17 @@ export default function HeroBanners() {
                   )}
                   {placement === 'birthday_level_up' && (
                     <p className="text-xs text-muted-foreground">
-                      Shown on the guest <strong>home</strong> page in &quot;Level up your birthday party&quot;.
+                      Shown on the guest <strong>home</strong> page in &quot;Baby Milestone &amp; Celebrations&quot;.
                       Lowest <strong>sort order</strong> = one full-width banner on top; each additional upload
-                      appears below as an alternating card (text/image zig-zag), not a side-by-side carousel.
+                      appears below as a card (Baby shower, Welcome baby, Name ceremony, Annprashan, Mundan
+                      ceremony). Optional title is the card label.
                     </p>
                   )}
                   {placement === 'birthday_extra_special' && (
                     <p className="text-xs text-muted-foreground">
-                      Shown on the guest <strong>home</strong> page in the &quot;Make your birthday extra
-                      special&quot; horizontal cards. Use third sub-categories for best labels; sort order controls
-                      card sequence.
+                      Shown on the guest <strong>home</strong> page in the &quot;Wedding Special&quot; horizontal
+                      cards (Flower decoration, Special Effects SFX, Catering service, Photography). Optional
+                      title is the card label; sort order controls card sequence.
                     </p>
                   )}
                   {placement === 'corporate_hero' && (
@@ -290,16 +296,31 @@ export default function HeroBanners() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="banner-title">Optional title (card line on hub / home sections)</Label>
+                <Label htmlFor="banner-title">Optional title (shown on guest home / wedding / festival)</Label>
                 <Input
                   id="banner-title"
                   type="text"
-                  placeholder="e.g. Rakhi, Christmas, or Diwali offers"
+                  placeholder="e.g. Engagement ceremony, Diwali Decorations, or Baby shower"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Shown when set; otherwise the third category name is used.
+                  Guest uses this as the card or banner label. Leave blank to keep the linked category name.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="banner-description">Optional description (Baby Milestone cards)</Label>
+                <Input
+                  id="banner-description"
+                  type="text"
+                  placeholder="e.g. Balloon walls and fairy lights for a shower at your location"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Shown as the card body on Baby Milestone &amp; Celebrations. Leave blank to use a matching
+                  product description, or a default line for that title.
                 </p>
               </div>
 

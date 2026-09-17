@@ -78,7 +78,9 @@ export async function superAdminResetPassword(body: {
 }
 
 export async function getSuperAdminProducts() {
-  return apiFetch<{ products: Record<string, unknown>[] }>(`${S}/products`, { method: "GET" });
+  return apiFetch<{ products: Record<string, unknown>[] }>(`${S}/products?limit=50`, {
+    method: "GET",
+  });
 }
 
 export async function getSuperAdminVenues() {
@@ -105,6 +107,7 @@ export async function superAdminUpdateProduct(productId: string, data: ProductMo
     tier: data.tier,
     tags: data.tags,
     inclusions: data.inclusions,
+    exclusions: data.exclusions,
     experiences: data.experiences,
     keyHighlights: data.keyHighlights,
     additionalCategories: data.additionalCategories,
@@ -120,6 +123,9 @@ export async function superAdminUpdateProduct(productId: string, data: ProductMo
   if (data.discountedPrice != null) jsonBody.discountedPrice = data.discountedPrice;
   if (data.balloonColorSelection) {
     jsonBody.balloonColorSelection = data.balloonColorSelection;
+  }
+  if (data.giftCardSelection) {
+    jsonBody.giftCardSelection = data.giftCardSelection;
   }
 
   if (files.length === 0) {
@@ -145,6 +151,7 @@ export async function superAdminUpdateProduct(productId: string, data: ProductMo
   fd.append("tier", data.tier);
   fd.append("tags", JSON.stringify(data.tags));
   fd.append("inclusions", JSON.stringify(data.inclusions));
+  fd.append("exclusions", JSON.stringify(data.exclusions));
   fd.append("experiences", JSON.stringify(data.experiences));
   fd.append("keyHighlights", JSON.stringify(data.keyHighlights));
   fd.append("additionalCategories", JSON.stringify(data.additionalCategories));
@@ -158,6 +165,9 @@ export async function superAdminUpdateProduct(productId: string, data: ProductMo
   if (data.youtubeVideoLink) fd.append("youtubeVideoLink", data.youtubeVideoLink);
   if (data.balloonColorSelection) {
     fd.append("balloonColorSelection", JSON.stringify(data.balloonColorSelection));
+  }
+  if (data.giftCardSelection) {
+    fd.append("giftCardSelection", JSON.stringify(data.giftCardSelection));
   }
 
   return apiFetch<{ message: string; product: unknown }>(
@@ -222,6 +232,8 @@ export async function superAdminUpdateVenue(
 
   const location = {
     address: data.address.trim(),
+    ...(data.city?.trim() ? { city: data.city.trim() } : {}),
+    ...(data.mapsUrl?.trim() ? { mapsUrl: data.mapsUrl.trim() } : {}),
     lat:
       data.lat != null && String(data.lat).trim() !== "" ? Number(data.lat) : undefined,
     lng:
@@ -433,6 +445,7 @@ export async function superAdminAddHeroBanner(body: {
     | "birthday_extra_special";
   sortOrder?: number;
   title?: string;
+  description?: string;
 }) {
   const fd = new FormData();
   fd.append("image", body.image);
@@ -442,6 +455,9 @@ export async function superAdminAddHeroBanner(body: {
   if (body.sortOrder != null) fd.append("sortOrder", String(body.sortOrder));
   if (body.title != null && String(body.title).trim() !== "") {
     fd.append("title", String(body.title).trim());
+  }
+  if (body.description != null && String(body.description).trim() !== "") {
+    fd.append("description", String(body.description).trim());
   }
   return apiFetch<{ message: string; banner: unknown }>(`${S}/add-hero-section-banner`, {
     method: "POST",

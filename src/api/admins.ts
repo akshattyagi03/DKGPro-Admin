@@ -205,6 +205,7 @@ export async function addHeroBanner(body: {
   sortOrder?: number;
   /** Optional label on festival / wedding hub cards (guest falls back to category name). */
   title?: string;
+  description?: string;
 }) {
   const fd = new FormData();
   fd.append("image", body.image);
@@ -214,6 +215,9 @@ export async function addHeroBanner(body: {
   if (body.sortOrder != null) fd.append("sortOrder", String(body.sortOrder));
   if (body.title != null && String(body.title).trim() !== "") {
     fd.append("title", String(body.title).trim());
+  }
+  if (body.description != null && String(body.description).trim() !== "") {
+    fd.append("description", String(body.description).trim());
   }
   return apiFetch<{ message: string; banner: unknown }>(`${A}/add-hero-section-banner`, {
     method: "POST",
@@ -263,6 +267,12 @@ export type ApiAdminOrderItem = {
       label?: string;
       colors?: string[];
     };
+    giftCardChoice?: {
+      babyName?: string;
+      whichBirthday?: string;
+      size?: string;
+      sizePrice?: number;
+    };
   };
 };
 
@@ -282,6 +292,8 @@ export type ApiAdminOrder = {
     state?: string;
     zipCode?: string;
     country?: string;
+    phoneNumber?: string;
+    alternatePhoneNumber?: string;
   };
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
@@ -454,6 +466,7 @@ export type AddProductBody = {
   }>;
   serviceableAreas?: { city: string; districts?: string[] }[];
   inclusions?: string[];
+  exclusions?: string[];
   experiences?: string[];
   keyHighlights?: string[];
   location?: string;
@@ -470,6 +483,14 @@ export type AddProductBody = {
     customOptionLabel?: string;
     inheritFromCategory?: boolean;
     presets?: { label: string }[];
+  };
+  giftCardSelection?: {
+    enabled?: boolean;
+    babyNameLabel?: string;
+    birthdayLabel?: string;
+    sizeLabel?: string;
+    inheritFromCategory?: boolean;
+    sizes?: { label: string; price?: number }[];
   };
 };
 
@@ -533,6 +554,7 @@ export async function addProduct(body: AddProductBody) {
     fd.append("customizationSections", JSON.stringify(fields.customizationSections));
   if (fields.serviceableAreas != null) fd.append("serviceableAreas", JSON.stringify(fields.serviceableAreas));
   if (fields.inclusions != null) fd.append("inclusions", JSON.stringify(fields.inclusions));
+  if (fields.exclusions != null) fd.append("exclusions", JSON.stringify(fields.exclusions));
   if (fields.experiences != null) fd.append("experiences", JSON.stringify(fields.experiences));
   if (fields.keyHighlights != null) fd.append("keyHighlights", JSON.stringify(fields.keyHighlights));
   if (fields.location) fd.append("location", fields.location);
@@ -543,6 +565,9 @@ export async function addProduct(body: AddProductBody) {
   if (fields.youtubeVideoLink) fd.append("youtubeVideoLink", fields.youtubeVideoLink);
   if (fields.balloonColorSelection != null) {
     fd.append("balloonColorSelection", JSON.stringify(fields.balloonColorSelection));
+  }
+  if (fields.giftCardSelection != null) {
+    fd.append("giftCardSelection", JSON.stringify(fields.giftCardSelection));
   }
 
   return apiFetch<{ product: ApiProductDoc }>(`${A}/addproducts`, {
@@ -717,7 +742,7 @@ export type ApiVenueDoc = {
   _id: string;
   name: string;
   description?: string;
-  location?: { address?: string; city?: string; lat?: number; lng?: number };
+  location?: { address?: string; city?: string; lat?: number; lng?: number; mapsUrl?: string };
   images?: string[];
   startingPrice?: number;
   typesOfVenues?: string[];
@@ -738,7 +763,7 @@ export type CreateVenueBody = {
   name: string;
   description: string;
   startingPrice: number;
-  location: { address: string; lat?: number; lng?: number };
+  location: { address: string; city?: string; lat?: number; lng?: number; mapsUrl?: string };
   typesOfVenues: string[];
   facilities: string[];
   accessibilityFeatures?: string[];
@@ -832,76 +857,5 @@ export async function getAdminServicePage(serviceKey: ServicePageKey | string) {
   return apiFetch<{ page: ApiServicePage }>(
     `${A}/service-pages/${encodeURIComponent(serviceKey)}`,
     { method: "GET" }
-  );
-}
-
-export async function updateAdminServicePage(
-  serviceKey: ServicePageKey | string,
-  body: {
-    title?: string;
-    subtitle?: string;
-    isActive?: boolean;
-    heroImage?: File | null;
-  }
-) {
-  const fd = new FormData();
-  if (body.title !== undefined) fd.append("title", body.title);
-  if (body.subtitle !== undefined) fd.append("subtitle", body.subtitle);
-  if (body.isActive !== undefined) fd.append("isActive", String(body.isActive));
-  if (body.heroImage) fd.append("heroImage", body.heroImage);
-  return apiFetch<{ message: string; page: ApiServicePage }>(
-    `${A}/service-pages/${encodeURIComponent(serviceKey)}`,
-    { method: "PUT", body: fd }
-  );
-}
-
-export async function addAdminServicePageItem(
-  serviceKey: ServicePageKey | string,
-  body: {
-    title: string;
-    description?: string;
-    sortOrder?: number;
-    image: File;
-  }
-) {
-  const fd = new FormData();
-  fd.append("title", body.title);
-  if (body.description !== undefined) fd.append("description", body.description);
-  if (body.sortOrder !== undefined) fd.append("sortOrder", String(body.sortOrder));
-  fd.append("image", body.image);
-  return apiFetch<{ message: string; page: ApiServicePage }>(
-    `${A}/service-pages/${encodeURIComponent(serviceKey)}/items`,
-    { method: "POST", body: fd }
-  );
-}
-
-export async function updateAdminServicePageItem(
-  serviceKey: ServicePageKey | string,
-  itemId: string,
-  body: {
-    title?: string;
-    description?: string;
-    sortOrder?: number;
-    image?: File | null;
-  }
-) {
-  const fd = new FormData();
-  if (body.title !== undefined) fd.append("title", body.title);
-  if (body.description !== undefined) fd.append("description", body.description);
-  if (body.sortOrder !== undefined) fd.append("sortOrder", String(body.sortOrder));
-  if (body.image) fd.append("image", body.image);
-  return apiFetch<{ message: string; page: ApiServicePage }>(
-    `${A}/service-pages/${encodeURIComponent(serviceKey)}/items/${encodeURIComponent(itemId)}`,
-    { method: "PUT", body: fd }
-  );
-}
-
-export async function deleteAdminServicePageItem(
-  serviceKey: ServicePageKey | string,
-  itemId: string
-) {
-  return apiFetch<{ message: string; page: ApiServicePage }>(
-    `${A}/service-pages/${encodeURIComponent(serviceKey)}/items/${encodeURIComponent(itemId)}`,
-    { method: "DELETE" }
   );
 }

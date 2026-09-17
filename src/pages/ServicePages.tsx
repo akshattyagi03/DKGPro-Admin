@@ -18,11 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  addAdminServicePageItem,
-  deleteAdminServicePageItem,
   getAdminServicePages,
-  updateAdminServicePage,
-  updateAdminServicePageItem,
   type ApiServicePage,
   type ApiServicePageItem,
   type ServicePageKey,
@@ -51,6 +47,7 @@ const TAB_META: {
 
 export default function ServicePages() {
   const { isSuperAdmin } = useAuth();
+  const canManage = isSuperAdmin;
   const qc = useQueryClient();
   const [activeKey, setActiveKey] = useState<ServicePageKey>('photography');
   const [title, setTitle] = useState('');
@@ -93,18 +90,14 @@ export default function ServicePages() {
   const invalidate = () => qc.invalidateQueries({ queryKey });
 
   const saveHeroMut = useMutation({
-    mutationFn: () =>
-      isSuperAdmin
-        ? updateSuperAdminServicePage(activeKey, {
-            title,
-            subtitle,
-            heroImage: heroFile,
-          })
-        : updateAdminServicePage(activeKey, {
-            title,
-            subtitle,
-            heroImage: heroFile,
-          }),
+    mutationFn: () => {
+      if (!canManage) throw new Error('Only a super admin can edit service pages');
+      return updateSuperAdminServicePage(activeKey, {
+        title,
+        subtitle,
+        heroImage: heroFile,
+      });
+    },
     onSuccess: () => {
       invalidate();
       setHeroFile(null);
@@ -127,10 +120,10 @@ export default function ServicePages() {
           sortOrder: Number(itemSortOrder) || 0,
           image: itemFile,
         };
-        return isSuperAdmin
-          ? updateSuperAdminServicePageItem(activeKey, itemModal.edit.id, body)
-          : updateAdminServicePageItem(activeKey, itemModal.edit.id, body);
+        if (!canManage) throw new Error('Only a super admin can edit service pages');
+        return updateSuperAdminServicePageItem(activeKey, itemModal.edit.id, body);
       }
+      if (!canManage) throw new Error('Only a super admin can edit service pages');
       if (!itemFile) throw new Error('Item image is required');
       const body = {
         title: itemTitle.trim(),
@@ -138,9 +131,7 @@ export default function ServicePages() {
         sortOrder: Number(itemSortOrder) || 0,
         image: itemFile,
       };
-      return isSuperAdmin
-        ? addSuperAdminServicePageItem(activeKey, body)
-        : addAdminServicePageItem(activeKey, body);
+      return addSuperAdminServicePageItem(activeKey, body);
     },
     onSuccess: () => {
       invalidate();
@@ -156,10 +147,10 @@ export default function ServicePages() {
   });
 
   const deleteItemMut = useMutation({
-    mutationFn: (itemId: string) =>
-      isSuperAdmin
-        ? deleteSuperAdminServicePageItem(activeKey, itemId)
-        : deleteAdminServicePageItem(activeKey, itemId),
+    mutationFn: (itemId: string) => {
+      if (!canManage) throw new Error('Only a super admin can delete service page items');
+      return deleteSuperAdminServicePageItem(activeKey, itemId);
+    },
     onSuccess: () => {
       invalidate();
       toast({ title: 'Item deleted' });
@@ -192,7 +183,11 @@ export default function ServicePages() {
     <DashboardLayout>
       <PageHeader
         title="Service pages"
-        description="Manage Photography, Catering, Games & Activities, and Special Effects pages shown from product detail."
+        description={
+          canManage
+            ? 'Manage Photography, Catering, Games & Activities, and Special Effects pages shown from product detail.'
+            : 'View Photography, Catering, Games & Activities, and Special Effects pages. Only a super admin can edit or delete.'
+        }
       />
 
       {isLoading ? (
@@ -231,6 +226,8 @@ export default function ServicePages() {
                             id={`title-${key}`}
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
+                            disabled={!canManage}
+                            readOnly={!canManage}
                           />
                         </div>
                         <div className="space-y-2 sm:col-span-2">
@@ -240,24 +237,38 @@ export default function ServicePages() {
                             value={subtitle}
                             onChange={(e) => setSubtitle(e.target.value)}
                             rows={3}
+                            disabled={!canManage}
+                            readOnly={!canManage}
                           />
                         </div>
                       </div>
-                      <CategoryBannerSingleField
-                        file={heroFile}
-                        onChange={setHeroFile}
-                        id={`hero-${key}`}
-                        label="Hero image"
-                        description="Shown at the top of the guest service page."
-                        remotePreviewUrl={page.hero.image}
-                        remotePreviewCaption="Current hero"
-                      />
-                      <Button
-                        onClick={() => saveHeroMut.mutate()}
-                        disabled={saveHeroMut.isPending}
-                      >
-                        {saveHeroMut.isPending ? 'Saving…' : 'Save hero'}
-                      </Button>
+                      {canManage ? (
+                        <CategoryBannerSingleField
+                          file={heroFile}
+                          onChange={setHeroFile}
+                          id={`hero-${key}`}
+                          label="Hero image"
+                          description="Shown at the top of the guest service page."
+                          remotePreviewUrl={page.hero.image}
+                          remotePreviewCaption="Current hero"
+                        />
+                      ) : page.hero.image ? (
+                        <div className="overflow-hidden rounded-lg border">
+                          <img
+                            src={page.hero.image}
+                            alt={`${label} hero`}
+                            className="max-h-56 w-full object-cover"
+                          />
+                        </div>
+                      ) : null}
+                      {canManage ? (
+                        <Button
+                          onClick={() => saveHeroMut.mutate()}
+                          disabled={saveHeroMut.isPending}
+                        >
+                          {saveHeroMut.isPending ? 'Saving…' : 'Save hero'}
+                        </Button>
+                      ) : null}
                     </CardContent>
                   </Card>
 
@@ -266,20 +277,28 @@ export default function ServicePages() {
                       <div>
                         <CardTitle>Packages / gallery</CardTitle>
                         <CardDescription>
-                          Upload cards with images — shown in a grid on the guest page.
+                          {canManage
+                            ? 'Upload cards with images — shown in a grid on the guest page.'
+                            : 'Gallery cards shown on the guest page. Only a super admin can add, edit, or delete.'}
                         </CardDescription>
                       </div>
-                      <Button type="button" size="sm" onClick={openAddItem}>
-                        <Plus className="mr-1 h-4 w-4" />
-                        Add item
-                      </Button>
+                      {canManage ? (
+                        <Button type="button" size="sm" onClick={openAddItem}>
+                          <Plus className="mr-1 h-4 w-4" />
+                          Add item
+                        </Button>
+                      ) : null}
                     </CardHeader>
                     <CardContent>
                       {page.items.length === 0 ? (
                         <EmptyState
                           icon={<Sparkles className="h-6 w-6 text-muted-foreground" />}
                           title="No items yet"
-                          description="Add packages or gallery images for this service page."
+                          description={
+                            canManage
+                              ? 'Add packages or gallery images for this service page.'
+                              : 'No gallery items on this service page yet.'
+                          }
                         />
                       ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -304,6 +323,7 @@ export default function ServicePages() {
                                     {item.description}
                                   </p>
                                 ) : null}
+                                {canManage ? (
                                 <div className="flex gap-2 pt-1">
                                   <Button
                                     type="button"
@@ -329,6 +349,7 @@ export default function ServicePages() {
                                     Delete
                                   </Button>
                                 </div>
+                                ) : null}
                               </div>
                             </div>
                           ))}
@@ -344,7 +365,7 @@ export default function ServicePages() {
       )}
 
       <Dialog
-        open={itemModal.open}
+        open={canManage && itemModal.open}
         onOpenChange={(open) => {
           if (!open) setItemModal({ open: false, edit: null });
         }}

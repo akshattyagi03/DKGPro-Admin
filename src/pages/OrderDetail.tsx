@@ -29,6 +29,7 @@ import {
   formatBalloonColorLine,
   formatMoneyInr,
   formatOrderDate,
+  giftCardDisplayRows,
   lineAddonsTotal,
   lineGrandTotal,
   linePackageTotal,
@@ -73,6 +74,7 @@ function OrderLineItem({ line, index }: { line: ApiAdminOrderItem; index: number
   const addonsTotal = lineAddonsTotal(line);
   const grandTotal = lineGrandTotal(line);
   const balloonColors = formatBalloonColorLine(line.bookingDetails?.balloonColorChoice);
+  const giftCardRows = giftCardDisplayRows(line.bookingDetails?.giftCardChoice);
   const booking = line.bookingDetails;
 
   return (
@@ -147,7 +149,7 @@ function OrderLineItem({ line, index }: { line: ApiAdminOrderItem; index: number
             </div>
           ) : null}
 
-          {booking?.bookingDate || booking?.pincode || balloonColors ? (
+          {booking?.bookingDate || booking?.pincode || balloonColors || giftCardRows.length ? (
             <div className="rounded-lg border border-dashed bg-muted/10 p-3 text-sm">
               <p className="mb-2 font-medium text-foreground">Service booking</p>
               <dl className="space-y-1.5">
@@ -157,6 +159,12 @@ function OrderLineItem({ line, index }: { line: ApiAdminOrderItem; index: number
                     <dd className="font-medium text-foreground">{balloonColors}</dd>
                   </div>
                 ) : null}
+                {giftCardRows.map((row) => (
+                  <div key={row.label} className="grid gap-1 sm:grid-cols-[6.5rem_1fr]">
+                    <dt className="text-muted-foreground">{row.label}</dt>
+                    <dd className="font-medium text-foreground">{row.value}</dd>
+                  </div>
+                ))}
                 {booking.bookingDate ? (
                   <div className="grid gap-1 sm:grid-cols-[6.5rem_1fr]">
                     <dt className="text-muted-foreground">Date</dt>

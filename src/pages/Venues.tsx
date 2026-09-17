@@ -193,6 +193,7 @@ export default function Venues() {
       location: {
         address: data.address.trim(),
         ...(data.city?.trim() ? { city: data.city.trim() } : {}),
+        ...(data.mapsUrl?.trim() ? { mapsUrl: data.mapsUrl.trim() } : {}),
         lat:
           data.lat != null && String(data.lat).trim() !== ''
             ? Number(data.lat)

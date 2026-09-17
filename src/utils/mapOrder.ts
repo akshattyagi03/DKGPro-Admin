@@ -44,6 +44,8 @@ export function apiAdminOrderToOrder(o: ApiAdminOrder): Order {
       state: addr.state ?? '',
       zipCode: addr.zipCode ?? '',
       country: addr.country ?? '',
+      phoneNumber: addr.phoneNumber ?? '',
+      alternatePhoneNumber: addr.alternatePhoneNumber ?? '',
     },
     paymentMethod: '—',
     createdAt:

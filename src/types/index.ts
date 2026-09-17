@@ -132,6 +132,8 @@ export interface Order {
     state: string;
     zipCode: string;
     country: string;
+    phoneNumber?: string;
+    alternatePhoneNumber?: string;
   };
   paymentMethod: string;
   createdAt: string;
