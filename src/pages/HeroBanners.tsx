@@ -246,8 +246,11 @@ export default function HeroBanners() {
                   )}
                   {placement === 'romantic_couple' && (
                     <p className="text-xs text-muted-foreground">
-                      Shown in the &quot;Romantic Couple Experience&quot; section on <strong>/wedding</strong>. Link
-                      each upload to a third sub-category; the layout uses up to four images.
+                      Shown in the &quot;Romantic Couple Experience&quot; mosaic. Optional title is the yellow name
+                      on the image (or the linked category name if title is blank). Sort{' '}
+                      <strong>0</strong> = large image; <strong>1–3</strong> = smaller tiles;{' '}
+                      <strong>4–6</strong> = the card below (venues / farmhouse / premium room). Each image
+                      still links to its sub- or third-category.
                     </p>
                   )}
                   {placement === 'birthday_level_up' && (
