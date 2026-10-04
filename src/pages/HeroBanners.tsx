@@ -37,7 +37,8 @@ type Placement =
   | 'birthday_extra_special'
   | 'corporate_hero'
   | 'corporate_gallery'
-  | 'corporate_gifting';
+  | 'corporate_gifting'
+  | 'kids_themes_hero';
 
 export default function HeroBanners() {
   const { isVendorAdmin, isSuperAdmin } = useAuth();
@@ -135,6 +136,10 @@ export default function HeroBanners() {
       ...(title.trim() ? { title: title.trim() } : {}),
       ...(description.trim() ? { description: description.trim() } : {}),
     };
+    if (placement === 'kids_themes_hero') {
+      mutation.mutate({ image: file, ...common });
+      return;
+    }
     if (kind === 'sub') {
       if (!subName) {
         toast({ title: 'Select a sub-category', variant: 'destructive' });
@@ -201,6 +206,9 @@ export default function HeroBanners() {
                         Romantic Couple Experience (/wedding)
                       </SelectItem>
                       <SelectItem value="kids">Kids Decorations</SelectItem>
+                      <SelectItem value="kids_themes_hero">
+                        Kids themes page hero (/categories/kids-celebration/themes)
+                      </SelectItem>
                       <SelectItem value="occasion">Make Every Occasion Extra Special</SelectItem>
                       <SelectItem value="birthday_level_up">
                         Baby Milestone &amp; Celebrations (home)
@@ -219,6 +227,13 @@ export default function HeroBanners() {
                       </SelectItem>
                     </SelectContent>
                   </Select>
+                  {placement === 'kids' && (
+                    <p className="text-xs text-muted-foreground">
+                      Home page Kids Decorations carousel. Export the image at about{' '}
+                      <strong>1250×630</strong> (same 2:1 shape as the previous banner). A wider file
+                      such as 1824×575 is shown shorter at the same width.
+                    </p>
+                  )}
                   {placement === 'festival' && (
                     <p className="text-xs text-muted-foreground">
                       Shown only on the guest <strong>home</strong> page in the &quot;Make Every Festival
@@ -283,6 +298,13 @@ export default function HeroBanners() {
                       Carousel in the corporate gifting block on <strong>/corporate-events</strong>.
                     </p>
                   )}
+                  {placement === 'kids_themes_hero' && (
+                    <p className="text-xs text-muted-foreground">
+                      Top banner on the guest <strong>Kids themes</strong> page
+                      (/categories/kids-celebration/themes). No category link. A new upload replaces the
+                      current banner.
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="banner-sort">Sort order</Label>
@@ -298,6 +320,8 @@ export default function HeroBanners() {
                 </div>
               </div>
 
+              {placement !== 'kids_themes_hero' && (
+              <>
               <div className="space-y-2">
                 <Label htmlFor="banner-title">Optional title (shown on guest home / wedding / festival)</Label>
                 <Input
@@ -326,7 +350,11 @@ export default function HeroBanners() {
                   product description, or a default line for that title.
                 </p>
               </div>
+              </>
+              )}
 
+              {placement !== 'kids_themes_hero' && (
+              <>
               <div className="space-y-3">
                 <Label>Link banner to</Label>
                 <RadioGroup
@@ -379,7 +407,7 @@ export default function HeroBanners() {
                     <SelectContent>
                       {thirdSelectItems.length > 0
                         ? thirdSelectItems.map((row) => (
-                            <SelectItem key={row.thirdName} value={row.thirdName}>
+                            <SelectItem key={row.id} value={row.id}>
                               {row.label}
                             </SelectItem>
                           ))
@@ -397,6 +425,8 @@ export default function HeroBanners() {
                   )}
                 </div>
               )}
+              </>
+              )}
 
               <CategoryBannerSingleField
                 file={file}
@@ -404,7 +434,7 @@ export default function HeroBanners() {
                 id="hero-banner-image"
                 label="Banner image"
                 description="Required — stored for the hero section. Field name: image."
-                emptySubtext="Wide ratio works best. PNG, JPG, or WebP."
+                emptySubtext="Wide ratio works best. PNG, JPG, WebP, or AVIF."
               />
 
               <Button type="submit" disabled={mutation.isPending} className="w-full sm:w-auto">

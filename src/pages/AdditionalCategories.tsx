@@ -40,7 +40,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import {
   flattenAdditionalCategoriesFromTree,
-  thirdCategoryBreadcrumbOptions,
 } from '@/utils/categoryTree';
 import { toast } from '@/hooks/use-toast';
 import { ApiError } from '@/lib/api';
@@ -70,11 +69,12 @@ export default function AdditionalCategories() {
   const isLoading = isVendorAdmin ? loadingVendor : isSuperAdmin ? loadingSuper : false;
 
   const rows = useMemo(() => flattenAdditionalCategoriesFromTree(tree), [tree]);
-  const thirdOptions = useMemo(() => thirdCategoryBreadcrumbOptions(tree), [tree]);
-  const additionalParentNames = useMemo(
-    () => Array.from(new Set(rows.map((r) => r.name))).sort((a, b) => a.localeCompare(b)),
-    [rows]
-  );
+  const additionalParentNames = useMemo(() => {
+    const names = rows
+      .filter((r) => r.level === 4 && /^(boys|girls)$/i.test(r.name.trim()))
+      .map((r) => r.name.trim());
+    return Array.from(new Set(names)).sort((a, b) => a.localeCompare(b));
+  }, [rows]);
 
   const filtered = rows.filter(
     (item) =>
@@ -183,13 +183,13 @@ export default function AdditionalCategories() {
         description={
           isSuperAdmin
             ? 'Edit name, banner, or delete additional categories.'
-            : 'Add additional categories under a third or additional category.'
+            : 'Add a theme under Boys or Girls.'
         }
       >
         {isVendorAdmin && (
           <Button
             onClick={() => setModalOpen(true)}
-            disabled={addMutation.isPending || thirdOptions.length === 0}
+            disabled={addMutation.isPending || additionalParentNames.length === 0}
           >
             <Plus className="w-4 h-4" />
             Add Additional Category
@@ -217,15 +217,15 @@ export default function AdditionalCategories() {
             icon={<GitBranch className="w-8 h-8 text-muted-foreground" />}
             title={rows.length === 0 ? 'No additional categories yet' : 'No additional categories found'}
             description={
-              thirdOptions.length === 0
-                ? 'Add third sub-categories first, then create additional categories under them.'
-                : 'Add categories under a third sub-category or nest under another additional category.'
+              additionalParentNames.length === 0
+                ? 'Boys and Girls need to exist before a theme can be added under them.'
+                : 'Add a theme under Boys or Girls.'
             }
             action={
               isVendorAdmin ? (
                 <Button
                   onClick={() => setModalOpen(true)}
-                  disabled={thirdOptions.length === 0}
+                  disabled={additionalParentNames.length === 0}
                 >
                   <Plus className="w-4 h-4" />
                   Add Additional Category
@@ -306,7 +306,6 @@ export default function AdditionalCategories() {
         }}
         additionalCategory={editing}
         onSave={handleSave}
-        thirdOptions={thirdOptions}
         additionalParentNames={additionalParentNames}
         lockParent={Boolean(isSuperAdmin && editing)}
       />

@@ -209,7 +209,7 @@ export function AddAddonModal({ open, onOpenChange, onCreated }: AddAddonModalPr
             file={image}
             onChange={setImage}
             label="Add-on image"
-            description="Required — same upload pattern as category banners. PNG, JPG, or WebP."
+            description="Required — same upload pattern as category banners. PNG, JPG, WebP, or AVIF."
             emptySubtext="Square or wide image works. Max size depends on server limits."
           />
 

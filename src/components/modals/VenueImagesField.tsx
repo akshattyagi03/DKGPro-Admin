@@ -42,7 +42,7 @@ export function VenueImagesField({
       Venue images <span className="text-destructive">*</span>
     </>
   ),
-  description = 'At least one image required. PNG, JPG, or WebP — drag & drop or browse. Up to 10 files.',
+  description = 'At least one image required. PNG, JPG, WebP, or AVIF — drag & drop or browse. Up to 10 files.',
   emptySubtext = 'Wide hero-style images work well on the guest venue page (e.g. 1200×630).',
 }: VenueImagesFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);

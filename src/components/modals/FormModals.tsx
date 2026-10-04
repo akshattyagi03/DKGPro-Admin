@@ -436,9 +436,7 @@ interface AdditionalCategoryModalProps {
     parentModel: 'ThirdCategory' | 'AdditionalCategory';
     bannerImage?: File | null;
   }) => void;
-  /** Parent = third: options with breadcrumb label, value = third category name */
-  thirdOptions: { label: string; thirdName: string }[];
-  /** Parent = additional: existing additional category names */
+  /** Boys or Girls — the only parents for a theme. */
   additionalParentNames: string[];
   /** Super-admin edit: parent is fixed; only name and banner change. */
   lockParent?: boolean;
@@ -449,14 +447,9 @@ export function AdditionalCategoryModal({
   onOpenChange,
   additionalCategory,
   onSave,
-  thirdOptions,
   additionalParentNames,
   lockParent = false,
 }: AdditionalCategoryModalProps) {
-  const [parentModel, setParentModel] = useState<'ThirdCategory' | 'AdditionalCategory'>(
-    'ThirdCategory'
-  );
-  const [thirdName, setThirdName] = useState('');
   const [additionalParentName, setAdditionalParentName] = useState('');
   const [name, setName] = useState(additionalCategory?.name || '');
   const [bannerFile, setBannerFile] = useState<File | null>(null);
@@ -464,35 +457,34 @@ export function AdditionalCategoryModal({
   useEffect(() => {
     if (!open || !additionalCategory) return;
     setName(additionalCategory.name || '');
-    setParentModel(additionalCategory.parentModel);
-    if (additionalCategory.parentModel === 'ThirdCategory') {
-      setThirdName(additionalCategory.parentName || '');
-      setAdditionalParentName('');
-    } else {
-      setAdditionalParentName(additionalCategory.parentName || '');
-      setThirdName('');
-    }
+    setAdditionalParentName(
+      additionalCategory.parentModel === 'AdditionalCategory'
+        ? additionalCategory.parentName || ''
+        : ''
+    );
     setBannerFile(null);
   }, [open, additionalCategory]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const parentName =
-      parentModel === 'ThirdCategory' ? thirdName : additionalParentName;
-    if (!parentName?.trim() || !name.trim()) {
-      toast({ title: 'Select parent and enter a name', variant: 'destructive' });
+    if (!name.trim()) {
+      toast({ title: 'Enter a name', variant: 'destructive' });
+      return;
+    }
+    if (!lockParent && !additionalParentName.trim()) {
+      toast({ title: 'Select Boys or Girls', variant: 'destructive' });
       return;
     }
     onSave({
       name: name.trim(),
-      parentName: parentName.trim(),
-      parentModel,
+      parentName: (lockParent ? additionalCategory?.parentName : additionalParentName)?.trim() || '',
+      parentModel: lockParent
+        ? additionalCategory?.parentModel || 'AdditionalCategory'
+        : 'AdditionalCategory',
       bannerImage: bannerFile,
     });
     onOpenChange(false);
     if (!additionalCategory) {
-      setParentModel('ThirdCategory');
-      setThirdName('');
       setAdditionalParentName('');
       setName('');
       setBannerFile(null);
@@ -504,47 +496,15 @@ export function AdditionalCategoryModal({
       open={open}
       onOpenChange={onOpenChange}
       title={additionalCategory ? 'Edit Additional Category' : 'Add Additional Category'}
-      description="Choose where it lives in the tree, then name it."
+      description="Add a theme under Boys or Girls."
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {!lockParent && (
-        <div className="space-y-2">
-          <Label>Parent type</Label>
-          <Select
-            value={parentModel}
-            onValueChange={(v) =>
-              setParentModel(v as 'ThirdCategory' | 'AdditionalCategory')
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Parent type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ThirdCategory">Third sub-category</SelectItem>
-              <SelectItem value="AdditionalCategory">Additional category (nested)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        )}
-        {!lockParent && parentModel === 'ThirdCategory' ? (
-          <div className="space-y-2">
-            <Label>Third sub-category</Label>
-            <Select value={thirdName} onValueChange={setThirdName} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select third sub-category" />
-              </SelectTrigger>
-              <SelectContent>
-                {thirdOptions.map((o) => (
-                  <SelectItem key={`${o.thirdName}-${o.label}`} value={o.thirdName}>
-                    {o.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : !lockParent ? (
+        {!lockParent ? (
           <div className="space-y-2">
             <Label>Parent additional category</Label>
+            <p className="text-xs text-muted-foreground">
+              Themes go under Boys or Girls only.
+            </p>
             <Select
               value={additionalParentName}
               onValueChange={setAdditionalParentName}
@@ -555,8 +515,8 @@ export function AdditionalCategoryModal({
                 <SelectValue
                   placeholder={
                     additionalParentNames.length === 0
-                      ? 'Create one under a third category first'
-                      : 'Select parent'
+                      ? 'Create Boys or Girls under a third category first'
+                      : 'Select Boys or Girls'
                   }
                 />
               </SelectTrigger>
@@ -1894,7 +1854,7 @@ export function BlogModal({ open, onOpenChange, blog, onSave }: BlogModalProps) 
           description={
             blog
               ? 'Upload a new file to replace the current featured image, or leave unchanged.'
-              : 'Required for new posts. PNG, JPG, or WebP — drag & drop or browse.'
+              : 'Required for new posts. PNG, JPG, WebP, or AVIF — drag & drop or browse.'
           }
           emptySubtext="Wide hero-style images work well on the guest blog (e.g. 1200×630)."
           remotePreviewUrl={!coverFile && blog?.coverImage ? blog.coverImage : null}

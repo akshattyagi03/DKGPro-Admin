@@ -106,15 +106,18 @@ export function categorySelectOptions(mains: ApiCategoryMain[]) {
   return { mainOptions, subOptions, thirdOptions };
 }
 
-/** Breadcrumb options for picking a third category (parent = third name). */
+/** Breadcrumb options for picking a third category. Value is the category id so duplicate names stay separate. */
 export function thirdCategoryBreadcrumbOptions(
   tree: ApiCategoryTreeMain[]
-): { label: string; thirdName: string }[] {
-  const opts: { label: string; thirdName: string }[] = [];
+): { id: string; label: string; thirdName: string }[] {
+  const opts: { id: string; label: string; thirdName: string }[] = [];
   for (const main of tree) {
     for (const sub of main.subCategories ?? []) {
       for (const third of sub.thirdCategories ?? []) {
+        const id = toIdString(third._id);
+        if (!id) continue;
         opts.push({
+          id,
           label: `${main.name} › ${sub.name} › ${third.name}`,
           thirdName: third.name,
         });

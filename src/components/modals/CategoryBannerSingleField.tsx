@@ -35,7 +35,7 @@ export function CategoryBannerSingleField({
   id = 'category-banner-image',
   className,
   label = 'Banner image',
-  description = 'Optional — shown on listings when set. PNG, JPG, or WebP.',
+  description = 'Optional — shown on listings when set. PNG, JPG, WebP, or AVIF.',
   emptySubtext = 'Recommended wide banner ratio (e.g. 1200×400). Max size depends on server limits.',
   remotePreviewUrl = null,
   remotePreviewCaption = 'Current image',

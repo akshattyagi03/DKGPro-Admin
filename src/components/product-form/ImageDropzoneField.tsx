@@ -12,7 +12,7 @@ export type ProductImageItem =
 
 const MAX_IMAGES = 10;
 const MAX_BYTES = 5 * 1024 * 1024;
-const ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp';
+const ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp,image/avif,.avif';
 
 function newId() {
   return typeof crypto !== 'undefined' && crypto.randomUUID
@@ -22,7 +22,14 @@ function newId() {
 
 function isAllowedImageType(file: File) {
   const t = file.type.toLowerCase();
-  return t === 'image/jpeg' || t === 'image/jpg' || t === 'image/png' || t === 'image/webp';
+  return (
+    t === 'image/jpeg' ||
+    t === 'image/jpg' ||
+    t === 'image/png' ||
+    t === 'image/webp' ||
+    t === 'image/avif' ||
+    file.name.toLowerCase().endsWith('.avif')
+  );
 }
 
 type ImageDropzoneFieldProps = {
@@ -94,7 +101,7 @@ export function ImageDropzoneField({ items, onChange, disabled, error }: ImageDr
       if (!isAllowedImageType(file)) {
         toast({
           title: 'Unsupported file type',
-          description: 'Use JPEG, PNG, or WebP only.',
+          description: 'Use JPEG, PNG, WebP, or AVIF only.',
           variant: 'destructive',
         });
         continue;
@@ -155,7 +162,7 @@ export function ImageDropzoneField({ items, onChange, disabled, error }: ImageDr
       <div>
         <Label className="text-foreground">Product images</Label>
         <p className="mt-0.5 text-xs text-muted-foreground">
-          Upload up to {MAX_IMAGES} images (JPEG, PNG, WebP, max 5 MB each), or add direct HTTPS links. Order is
+          Upload up to {MAX_IMAGES} images (JPEG, PNG, WebP, AVIF, max 5 MB each), or add direct HTTPS links. Order is
           preserved.
         </p>
       </div>
