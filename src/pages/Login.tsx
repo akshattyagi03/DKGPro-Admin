@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError } from "@/lib/api";
-import { Layers, Shield } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 type LoginLocationState = {
   fromSignup?: boolean;
@@ -77,13 +77,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-6 rounded-xl border border-border bg-card p-8 shadow-card">
         <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-            {mode === "superadmin" ? (
-              <Shield className="h-6 w-6" />
-            ) : (
-              <Layers className="h-6 w-6" />
-            )}
-          </div>
+          <img src="/dkg-logo.svg" alt="DKG Pro" className="h-10 w-auto" />
           <h1 className="text-2xl font-bold tracking-tight">
             {mode === "superadmin" ? "Super admin sign in" : "Vendor admin sign in"}
           </h1>
@@ -161,7 +155,14 @@ export default function Login() {
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Signing in…
+              </>
+            ) : (
+              "Sign in"
+            )}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             {mode === "admin" ? (

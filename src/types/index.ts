@@ -57,6 +57,7 @@ export interface AdditionalCategory {
   parentModel: 'ThirdCategory' | 'AdditionalCategory';
   level: number;
   description?: string;
+  bannerImage?: string | null;
   mainCategoryName?: string;
   subCategoryName?: string;
   thirdCategoryName?: string;

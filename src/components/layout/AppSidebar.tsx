@@ -14,7 +14,6 @@ import {
   X,
   LogOut,
   Settings,
-  Layers,
   Plus,
   List,
   Building2,
@@ -144,16 +143,14 @@ export function AppSidebar() {
   const NavContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-          <Layers className="w-5 h-5" />
+      <div className="flex items-center px-4 py-5 border-b border-sidebar-border">
+        <div className={cn('overflow-hidden', collapsed ? 'w-10' : 'w-[148px]')}>
+          <img
+            src="/dkg-logo.svg"
+            alt="DKG Pro"
+            className="h-9 w-auto max-w-none"
+          />
         </div>
-        {!collapsed && (
-          <div className="flex flex-col">
-            <span className="font-bold text-sidebar-foreground">E-Commerce</span>
-            <span className="text-xs text-sidebar-muted">Admin Panel</span>
-          </div>
-        )}
       </div>
 
       {/* Navigation */}

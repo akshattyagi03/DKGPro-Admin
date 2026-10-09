@@ -99,6 +99,7 @@ export type ApiAdditionalCategoryNode = {
   parentCategory?: string;
   parentModel?: "ThirdCategory" | "AdditionalCategory";
   level?: number;
+  bannerImage?: string | null;
   createdAt?: string;
   updatedAt?: string;
   children?: ApiAdditionalCategoryNode[];

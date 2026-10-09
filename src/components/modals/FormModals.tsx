@@ -40,6 +40,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   ImageIcon,
   Layers,
+  Loader2,
   ListChecks,
   MapPin,
   Package,
@@ -440,6 +441,8 @@ interface AdditionalCategoryModalProps {
   additionalParentNames: string[];
   /** Super-admin edit: parent is fixed; only name and banner change. */
   lockParent?: boolean;
+  /** True while create or update is in flight. */
+  saving?: boolean;
 }
 
 export function AdditionalCategoryModal({
@@ -449,6 +452,7 @@ export function AdditionalCategoryModal({
   onSave,
   additionalParentNames,
   lockParent = false,
+  saving = false,
 }: AdditionalCategoryModalProps) {
   const [additionalParentName, setAdditionalParentName] = useState('');
   const [name, setName] = useState(additionalCategory?.name || '');
@@ -483,7 +487,6 @@ export function AdditionalCategoryModal({
         : 'AdditionalCategory',
       bannerImage: bannerFile,
     });
-    onOpenChange(false);
     if (!additionalCategory) {
       setAdditionalParentName('');
       setName('');
@@ -544,13 +547,25 @@ export function AdditionalCategoryModal({
           id="additional-category-banner"
           file={bannerFile}
           onChange={setBannerFile}
+          label="Hero banner"
+          description="Shown at the top of this theme’s product page. Product cards appear below it."
+          remotePreviewUrl={additionalCategory?.bannerImage}
         />
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button type="submit">
-            {additionalCategory ? 'Save Changes' : 'Create'}
+          <Button type="submit" disabled={saving}>
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {additionalCategory ? 'Updating…' : 'Uploading…'}
+              </>
+            ) : additionalCategory ? (
+              'Save Changes'
+            ) : (
+              'Create'
+            )}
           </Button>
         </DialogFooter>
       </form>

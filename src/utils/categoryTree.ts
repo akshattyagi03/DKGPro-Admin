@@ -152,6 +152,7 @@ export function flattenAdditionalCategoriesFromTree(
           "ThirdCategory",
         level: node.level ?? 4,
         description: node.description,
+        bannerImage: node.bannerImage,
         mainCategoryName: ctx.mainName,
         subCategoryName: ctx.subName,
         thirdCategoryName: ctx.thirdName,

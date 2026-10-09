@@ -91,6 +91,8 @@ export default function AdditionalCategories() {
       qc.invalidateQueries({ queryKey: ['admin', 'category-tree'] });
       qc.invalidateQueries({ queryKey: ['admin', 'categories'] });
       toast({ title: 'Additional category created' });
+      setEditing(null);
+      setModalOpen(false);
     },
     onError: (err) => {
       const msg =
@@ -173,7 +175,6 @@ export default function AdditionalCategories() {
       return;
     }
     addMutation.mutate(data);
-    setModalOpen(false);
   };
 
   return (
@@ -301,6 +302,7 @@ export default function AdditionalCategories() {
       <AdditionalCategoryModal
         open={modalOpen}
         onOpenChange={(o) => {
+          if (!o && (addMutation.isPending || updateSuperMut.isPending)) return;
           setModalOpen(o);
           if (!o) setEditing(null);
         }}
@@ -308,6 +310,7 @@ export default function AdditionalCategories() {
         onSave={handleSave}
         additionalParentNames={additionalParentNames}
         lockParent={Boolean(isSuperAdmin && editing)}
+        saving={addMutation.isPending || updateSuperMut.isPending}
       />
 
       <AlertDialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
